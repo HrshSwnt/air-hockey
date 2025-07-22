@@ -41,11 +41,25 @@ const roomSettings = new Map<RoomCode, RoomSettings>();
 io.on('connection', (socket: Socket) => {
   console.log('User connected:', socket.id);
 
-  socket.on('join_room', ({ name, room, timerEnabled, timerSeconds }: { name: string; room: RoomCode; timerEnabled?: boolean; timerSeconds?: number }) => {
+  socket.on('join_room', ({
+    name,
+    room,
+    timerEnabled,
+    timerSeconds,
+    overrideSettings
+  }: {
+    name: string;
+    room: RoomCode;
+    timerEnabled?: boolean;
+    timerSeconds?: number;
+    overrideSettings?: boolean; // <-- NEW
+  }) => {
     socket.join(room);
     playerInfo.set(socket.id, { name, room });
 
-    if (!rooms.has(room)) {
+    const isFirstJoin = !rooms.has(room);
+
+    if (isFirstJoin) {
       rooms.set(room, new Set());
       gameStates.set(room, { players: [], scores: [0, 0] });
       roomSettings.set(room, {
@@ -62,6 +76,14 @@ io.on('connection', (socket: Socket) => {
     gameState.players = gameState.players.slice(0, 2);
 
     const settings = roomSettings.get(room)!;
+
+    // ✅ Only override settings if explicitly requested
+    if (!isFirstJoin && overrideSettings) {
+      if (typeof timerEnabled !== 'undefined') settings.timerEnabled = timerEnabled;
+      if (typeof timerSeconds === 'number') settings.timerSeconds = timerSeconds;
+      console.log(`[Room ${room}] Settings overridden by second player`, settings);
+    }
+
     console.log(`Player ${name} joined room ${room}`);
 
     if (players.size === 2) {
@@ -69,6 +91,7 @@ io.on('connection', (socket: Socket) => {
         io.to(id).emit('start-game', settings);
         io.to(id).emit('state_update', gameState);
       }
+
       io.to(room).emit('timer_start', {
         startTime: Date.now(),
         duration: settings.timerSeconds * 1000,
@@ -78,6 +101,8 @@ io.on('connection', (socket: Socket) => {
       socket.emit('waiting', settings);
     }
   });
+
+
 
   socket.on('score', ({ room, playerIndex }: { room: RoomCode; playerIndex: 0 | 1 }) => {
     const state = gameStates.get(room);
