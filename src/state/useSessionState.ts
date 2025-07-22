@@ -8,11 +8,13 @@ export interface SessionInfo {
   name: string;
   room: string;
   status: SessionStatus;
+  timerEnabled: boolean;
+  timerSeconds: number;
 }
 
 export interface UseSessionState {
   session: SessionInfo;
-  joinRoom: (name: string, room: string) => void;
+  joinRoom: (name: string, room: string, timerEnabled: boolean, timerSeconds: number) => void;
   resetSession: () => void;
 }
 
@@ -21,22 +23,40 @@ export function useSessionState(): UseSessionState {
     name: '',
     room: '',
     status: 'idle',
+    timerEnabled: false,
+    timerSeconds: 90,
   });
 
   useEffect(() => {
-    socket.on('waiting', () => {
-      setSession((prev) => ({ ...prev, status: 'waiting' }));
+    socket.on('waiting', (data: { timerEnabled: boolean; timerSeconds: number }) => {
+      setSession((prev) => ({
+        ...prev,
+        status: 'waiting',
+        timerEnabled: data.timerEnabled,
+        timerSeconds: data.timerSeconds,
+      }));
     });
 
-    socket.on('start-game', () => {
-      setSession((prev) => ({ ...prev, status: 'starting' }));
+    socket.on('start-game', (data: { timerEnabled: boolean; timerSeconds: number }) => {
+      setSession((prev) => ({
+        ...prev,
+        status: 'starting',
+        timerEnabled: data.timerEnabled,
+        timerSeconds: data.timerSeconds,
+      }));
       setTimeout(() => {
         setSession((prev) => ({ ...prev, status: 'in-game' }));
       }, 300);
     });
 
     socket.on('disconnect', () => {
-      setSession({ name: '', room: '', status: 'idle' });
+      setSession({
+        name: '',
+        room: '',
+        status: 'idle',
+        timerEnabled: false,
+        timerSeconds: 90,
+      });
     });
 
     return () => {
@@ -46,13 +66,19 @@ export function useSessionState(): UseSessionState {
     };
   }, []);
 
-  const joinRoom = (name: string, room: string) => {
-    setSession({ name, room, status: 'waiting' });
-    socket.emit('join_room', { name, room });
+  const joinRoom = (name: string, room: string, timerEnabled: boolean, timerSeconds: number) => {
+    setSession({ name, room, status: 'waiting', timerEnabled, timerSeconds });
+    socket.emit('join_room', { name, room, timerEnabled, timerSeconds });
   };
 
   const resetSession = () => {
-    setSession({ name: '', room: '', status: 'idle' });
+    setSession({
+      name: '',
+      room: '',
+      status: 'idle',
+      timerEnabled: false,
+      timerSeconds: 90,
+    });
   };
 
   return { session, joinRoom, resetSession };

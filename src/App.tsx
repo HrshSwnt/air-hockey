@@ -2,7 +2,7 @@
 import GameCanvas from './game/GameCanvas';
 import HUD from './ui/HUD';
 import Menu from './ui/Menu';
-
+import Timer from './ui/Timer';
 
 function App() {
 
@@ -11,6 +11,7 @@ function App() {
       <GameCanvas />
       <HUD />
       <Menu />
+      <Timer />
     </div>
   );
 }
