@@ -8,7 +8,21 @@ export function useGameTimer() {
   const [remaining, setRemaining] = useState<number | null>(null);
 
   useEffect(() => {
-    const handleTimerStart = ({ startTime, duration }: { startTime: number; duration: number }) => {
+    const handleTimerStart = ({
+      startTime,
+      duration,
+    }: {
+      startTime: number;
+      duration: number;
+    }) => {
+      // Ignore disabled timer
+      if (!duration || duration <= 0) {
+        setStartTime(null);
+        setDuration(0);
+        setRemaining(null);
+        return;
+      }
+
       setStartTime(startTime);
       setDuration(duration);
     };

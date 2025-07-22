@@ -1,3 +1,4 @@
+// local timer hook not used in the server
 import { useEffect, useState } from 'react';
 
 export function useTimer(startSeconds: number, active: boolean): number {
