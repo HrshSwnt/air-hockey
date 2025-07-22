@@ -8,6 +8,7 @@ Frontend: React, Socket.io, Three.js, Matter.js
 - [x] Implemented Menu, HUD, Paddle, Puck and GameCanvas skeletons
 - [x] Added a backend server and added interface for the Menu
 - [x] Implement player names on HUD
+- [x] Implemented Timer and Ping counter
 - [ ] Add game state hook for tracking puck and paddle locally and over the network
 - [ ] Add socket events for syncing game state
 - [ ] Integrate Matter.js and replace fake physics
